@@ -4,12 +4,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.config import settings
+from app.core.logging import setup_logging
+from app.core.redis import close_redis, init_redis
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Startup: initialise connections (DB, Redis) — added in Step 04
+    setup_logging()
+    await init_redis()
     yield
-    # Shutdown: close connections — added in Step 04
+    await close_redis()
 
 
 app = FastAPI(
@@ -21,7 +26,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[settings.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
